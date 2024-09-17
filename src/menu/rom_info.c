@@ -8,6 +8,10 @@
 #include "rom_info.h"
 #include "utils/fs.h"
 
+#ifndef OVERRIDES_SUBDIRECTORY
+#define OVERRIDES_SUBDIRECTORY      "overrides"
+#endif
+
 
 #define SWAP_VARS(x0, x1)       { typeof(x0) tmp = (x0); (x0) = (x1); (x1) = (tmp); }
 
@@ -794,11 +798,13 @@ static void extract_rom_info (match_t *match, rom_header_t *rom_header, rom_info
     }
 }
 
-static void load_overrides (path_t *path, rom_info_t *rom_info) {
+static void load_overrides (path_t *path, rom_info_t *rom_info, settings_t *settings) {
     path_t *overrides_path = path_clone(path);
 
     path_ext_replace(overrides_path, "ini");
-
+    if (settings->use_saves_folder) {
+        path_push_subdir(overrides_path, OVERRIDES_SUBDIRECTORY);
+    }
     mini_t *ini = mini_load(path_get(overrides_path));
 
     rom_info->override.cic = false;
@@ -827,10 +833,26 @@ static void load_overrides (path_t *path, rom_info_t *rom_info) {
     path_free(overrides_path);
 }
 
-static rom_err_t save_override (path_t *path, const char *id, int value, int default_value) {
+static bool create_overrides_subdirectory (path_t *path) {
+    path_t *override_folder_path = path_clone(path);
+    path_pop(override_folder_path);
+    path_push(override_folder_path, OVERRIDES_SUBDIRECTORY);
+    bool error = directory_create(path_get(override_folder_path));
+    path_free(override_folder_path);
+    return error;
+}
+
+static rom_err_t save_override (path_t *path, const char *id, int value, int default_value, settings_t *settings) {
     path_t *overrides_path = path_clone(path);
 
     path_ext_replace(overrides_path, "ini");
+    if (settings->use_saves_folder) {
+        if (create_overrides_subdirectory(overrides_path)) {
+            path_free(overrides_path);
+            return ROM_ERR_SAVE_IO;
+        }
+        path_push_subdir(overrides_path, OVERRIDES_SUBDIRECTORY);
+    }
 
     mini_t *ini = mini_try_load(path_get(overrides_path));
 
@@ -910,11 +932,11 @@ bool rom_info_get_cic_seed (rom_info_t *rom_info, uint8_t *seed) {
     return (!rom_info->override.cic);
 }
 
-rom_err_t rom_info_override_cic_type (path_t *path, rom_info_t *rom_info, rom_cic_type_t cic_type) {
+rom_err_t rom_info_override_cic_type (path_t *path, rom_info_t *rom_info, rom_cic_type_t cic_type, settings_t *settings) {
     rom_info->override.cic = (cic_type != ROM_CIC_TYPE_AUTOMATIC);
     rom_info->override.cic_type = cic_type;
 
-    return save_override(path, "cic_type", rom_info->override.cic_type, ROM_CIC_TYPE_AUTOMATIC);
+    return save_override(path, "cic_type", rom_info->override.cic_type, ROM_CIC_TYPE_AUTOMATIC, settings);
 }
 
 rom_save_type_t rom_info_get_save_type (rom_info_t *rom_info) {
@@ -925,11 +947,11 @@ rom_save_type_t rom_info_get_save_type (rom_info_t *rom_info) {
     }
 }
 
-rom_err_t rom_info_override_save_type (path_t *path, rom_info_t *rom_info, rom_save_type_t save_type) {
+rom_err_t rom_info_override_save_type (path_t *path, rom_info_t *rom_info, rom_save_type_t save_type, settings_t *settings) {
     rom_info->override.save = (save_type != SAVE_TYPE_AUTOMATIC);
     rom_info->override.save_type = save_type;
 
-    return save_override(path, "save_type", rom_info->override.save_type, SAVE_TYPE_AUTOMATIC);
+    return save_override(path, "save_type", rom_info->override.save_type, SAVE_TYPE_AUTOMATIC, settings);
 }
 
 rom_tv_type_t rom_info_get_tv_type (rom_info_t *rom_info) {
@@ -940,14 +962,14 @@ rom_tv_type_t rom_info_get_tv_type (rom_info_t *rom_info) {
     }
 }
 
-rom_err_t rom_info_override_tv_type (path_t *path, rom_info_t *rom_info, rom_tv_type_t tv_type) {
+rom_err_t rom_info_override_tv_type (path_t *path, rom_info_t *rom_info, rom_tv_type_t tv_type, settings_t *settings) {
     rom_info->override.tv = (tv_type != ROM_TV_TYPE_AUTOMATIC);
     rom_info->override.tv_type = tv_type;
 
-    return save_override(path, "tv_type", rom_info->override.tv_type, ROM_TV_TYPE_AUTOMATIC);
+    return save_override(path, "tv_type", rom_info->override.tv_type, ROM_TV_TYPE_AUTOMATIC, settings);
 }
 
-rom_err_t rom_info_load (path_t *path, rom_info_t *rom_info) {
+rom_err_t rom_info_load (path_t *path, rom_info_t *rom_info, settings_t *settings) {
     FILE *f;
     rom_header_t rom_header;
 
@@ -969,7 +991,7 @@ rom_err_t rom_info_load (path_t *path, rom_info_t *rom_info) {
 
     extract_rom_info(&match, &rom_header, rom_info);
 
-    load_overrides(path, rom_info);
+    load_overrides(path, rom_info, settings);
 
     return ROM_OK;
 }

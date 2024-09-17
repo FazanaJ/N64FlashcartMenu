@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "path.h"
+#include "settings.h"
 
 
 /** @brief ROM error enumeration. */
@@ -227,15 +228,15 @@ typedef struct {
 
 rom_cic_type_t rom_info_get_cic_type (rom_info_t *rom_info);
 bool rom_info_get_cic_seed (rom_info_t *rom_info, uint8_t *seed);
-rom_err_t rom_info_override_cic_type (path_t *path, rom_info_t *rom_info, rom_cic_type_t cic_type);
+rom_err_t rom_info_override_cic_type (path_t *path, rom_info_t *rom_info, rom_cic_type_t cic_type, settings_t *settings);
 
 rom_save_type_t rom_info_get_save_type (rom_info_t *rom_info);
-rom_err_t rom_info_override_save_type (path_t *path, rom_info_t *rom_info, rom_save_type_t save_type);
+rom_err_t rom_info_override_save_type (path_t *path, rom_info_t *rom_info, rom_save_type_t save_type, settings_t *settings);
 
 rom_tv_type_t rom_info_get_tv_type (rom_info_t *rom_info);
-rom_err_t rom_info_override_tv_type (path_t *path, rom_info_t *rom_info, rom_tv_type_t tv_type);
+rom_err_t rom_info_override_tv_type (path_t *path, rom_info_t *rom_info, rom_tv_type_t tv_type, settings_t *settings);
 
-rom_err_t rom_info_load (path_t *path, rom_info_t *rom_info);
+rom_err_t rom_info_load (path_t *path, rom_info_t *rom_info, settings_t *settings);
 
 
 #endif

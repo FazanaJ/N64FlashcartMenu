@@ -120,7 +120,7 @@ static const char *format_cic_type (rom_cic_type_t cic_type) {
 
 static void set_cic_type (menu_t *menu, void *arg) {
     rom_cic_type_t cic_type = (rom_cic_type_t) (arg);
-    rom_err_t err = rom_info_override_cic_type(menu->load.rom_path, &menu->load.rom_info, cic_type);
+    rom_err_t err = rom_info_override_cic_type(menu->load.rom_path, &menu->load.rom_info, cic_type, &menu->settings);
     if (err != ROM_OK) {
         menu_show_error(menu, convert_error_message(err));
     }
@@ -129,7 +129,7 @@ static void set_cic_type (menu_t *menu, void *arg) {
 
 static void set_save_type (menu_t *menu, void *arg) {
     rom_save_type_t save_type = (rom_save_type_t) (arg);
-    rom_err_t err = rom_info_override_save_type(menu->load.rom_path, &menu->load.rom_info, save_type);
+    rom_err_t err = rom_info_override_save_type(menu->load.rom_path, &menu->load.rom_info, save_type, &menu->settings);
     if (err != ROM_OK) {
         menu_show_error(menu, convert_error_message(err));
     }
@@ -138,7 +138,7 @@ static void set_save_type (menu_t *menu, void *arg) {
 
 static void set_tv_type (menu_t *menu, void *arg) {
     rom_tv_type_t tv_type = (rom_tv_type_t) (arg);
-    rom_err_t err = rom_info_override_tv_type(menu->load.rom_path, &menu->load.rom_info, tv_type);
+    rom_err_t err = rom_info_override_tv_type(menu->load.rom_path, &menu->load.rom_info, tv_type, &menu->settings);
     if (err != ROM_OK) {
         menu_show_error(menu, convert_error_message(err));
     }
@@ -347,7 +347,7 @@ void view_load_rom_init (menu_t *menu) {
 
     menu->load.rom_path = path_clone_push(menu->browser.directory, menu->browser.entry->name);
 
-    rom_err_t err = rom_info_load(menu->load.rom_path, &menu->load.rom_info);
+    rom_err_t err = rom_info_load(menu->load.rom_path, &menu->load.rom_info, &menu->settings);
     if (err != ROM_OK) {
         path_free(menu->load.rom_path);
         menu->load.rom_path = NULL;
