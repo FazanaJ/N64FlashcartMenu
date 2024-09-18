@@ -19,20 +19,21 @@ static const char *text_extensions[] = { "txt", "ini", "yml", "yaml", NULL };
 static const char *music_extensions[] = { "mp3", NULL };
 
 static const char *hidden_paths[] = {
-    "/menu.bin",
-    "/menu",
-    "/N64FlashcartMenu.n64",
-    "/ED64",
-    "/ED64P",
-    "/sc64menu.n64",
+    "menu.bin",
+    "menu",
+    "N64FlashcartMenu.n64",
+    "ED64",
+    "ED64P",
+    "sc64menu.n64",
+    "overrides",
     // Windows garbage
-    "/System Volume Information",
+    "System Volume Information",
     // macOS garbage
-    "/.fseventsd",
-    "/.Spotlight-V100",
-    "/.Trashes",
-    "/.VolumeIcon.icns",
-    "/.metadata_never_index",
+    ".fseventsd",
+    ".Spotlight-V100",
+    ".Trashes",
+    ".VolumeIcon.icns",
+    ".metadata_never_index",
     NULL,
 };
 
@@ -107,16 +108,12 @@ static bool load_directory (menu_t *menu) {
         bool hide = false;
 
         if (!menu->settings.show_protected_entries) {
-            path_push(path, info.d_name);
-
             for (int i = 0; hidden_paths[i] != NULL; i++) {
-                if (strcmp(strip_fs_prefix(path_get(path)), hidden_paths[i]) == 0) {
+                if (strcmp(info.d_name, hidden_paths[i]) == 0) {
                     hide = true;
                     break;
                 }
             }
-
-            path_pop(path);
         }
 
         if (!hide) {
